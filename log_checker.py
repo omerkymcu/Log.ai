@@ -1,13 +1,15 @@
 import os
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 import chardet
 import glob
+
 
 def get_encoding_type(file):
     with open(file, 'rb') as f:
         rawdata = f.read()
     return chardet.detect(rawdata)['encoding']
+
 
 def check_logs(folder_path):
     logs = []
@@ -30,45 +32,29 @@ def check_logs(folder_path):
     if error_lines:
         root = tk.Tk()
         root.title("Error Lines")
-        root.geometry("800x600")
+        root.geometry("1024x768")
 
-        # Create a frame to hold the columns
-        frame = tk.Frame(root)
-        frame.pack(fill="both", expand=True)
+        textbox = tk.Text(root)
+        textbox.pack(fill="both", expand=True)
 
-        # Calculate the width of the columns based on the width of the window
-        column_width = (root.winfo_width() // 3) - 10
+        # Add a Copy button to copy the error lines to the clipboard
+        copy_button = ttk.Button(root, text="Copy", command=lambda: root.clipboard_append(textbox.get("1.0", "end-1c")))
+        copy_button.pack(side="bottom", padx=10, pady=10)
 
-        # Create labels for each column
-        file_label = tk.Label(frame, text="File", width=column_width)
-        line_label = tk.Label(frame, text="Line", width=column_width)
-        error_label = tk.Label(frame, text="Error", width=column_width)
+        # Add a scrollbar to the text box
+        scrollbar = ttk.Scrollbar(root, orient="vertical", command=textbox.yview)
+        scrollbar.pack(side="right", fill="y")
 
-        # Pack the labels into the frame
-        file_label.pack(side="left")
-        line_label.pack(side="left")
-        error_label.pack(side="left")
+        textbox.config(yscrollcommand=scrollbar.set)
 
-        # Add a separator line
-        separator = tk.Frame(frame, height=2, bd=1, relief="sunken")
-        separator.pack(fill="x")
-
+        # Split error lines into columns based on whitespace
         for line in error_lines:
-            # Split the line into file, line number, and error message
-            parts = line.split(": ")
-            file = parts[0]
-            line_number = parts[1]
-            error = parts[2].strip()
-
-            # Create labels for each part
-            file_label = tk.Label(frame, text=file, width=column_width, anchor="w")
-            line_label = tk.Label(frame, text=line_number, width=column_width, anchor="w")
-            error_label = tk.Label(frame, text=error, width=column_width, anchor="w")
-
-            # Pack the labels into the frame
-            file_label.pack(side="left", fill="x")
-            line_label.pack(side="left", fill="x")
-            error_label.pack(side="left", fill="x")
+            parts = line.split()
+            if len(parts) >= 3:
+                filepath = parts[0]
+                line_number = parts[1].replace(",", "")
+                error = " ".join(parts[2:]).strip()
+                textbox.insert("end", f"{filepath:<60}{line_number:<10}{error}\n")
 
         root.mainloop()
     else:
@@ -76,4 +62,5 @@ def check_logs(folder_path):
 
 
 folder_path = filedialog.askdirectory()
-check_logs(folder_path)
+if folder_path:
+    check_logs(folder_path)
