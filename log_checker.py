@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog, ttk
 import chardet
+import csv
 import glob
 
 
@@ -13,10 +14,10 @@ def get_encoding_type(file):
 
 def check_logs(folder_path):
     logs = []
-    for file in glob.glob(os.path.join(folder_path, '*.log')):
-        logs.append(file)
-    for file in glob.glob(os.path.join(folder_path, '*.txt')):
-        logs.append(file)
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith('.log') or file.endswith('.txt'):
+                logs.append(os.path.join(root, file))
     num_files = len(logs)
     i = 1
     error_lines = []
@@ -25,11 +26,19 @@ def check_logs(folder_path):
         with open(file, mode='r', encoding=enc, errors='ignore') as f:
             for j, line in enumerate(f):
                 if 'error' in line.lower():
-                    error_lines.append(f"{file}, Line {j + 1}: {line.strip()}")
+                    error_lines.append([file, j + 1, line.strip()])
+
         print(f"{i} of {num_files} files processed")
         i += 1
 
     if error_lines:
+        with open('error_log.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(['File Path', 'Line Number', 'Error'])
+
+            for line in error_lines:
+                writer.writerow(line)
+
         root = tk.Tk()
         root.title("Error Lines")
         root.geometry("1024x768")
@@ -49,12 +58,11 @@ def check_logs(folder_path):
 
         # Split error lines into columns based on whitespace
         for line in error_lines:
-            parts = line.split()
-            if len(parts) >= 3:
-                filepath = parts[0]
-                line_number = parts[1].replace(",", "")
-                error = " ".join(parts[2:]).strip()
-                textbox.insert("end", f"{filepath:<60}{line_number:<10}{error}\n")
+            parts = line
+            filepath = parts[0]
+            line_number = parts[1]
+            error = parts[2]
+            textbox.insert("end", f"{filepath:<60}{line_number:<10}{error}\n")
 
         root.mainloop()
     else:
