@@ -1,6 +1,6 @@
 import os
 import tkinter as tk
-from tkinter import filedialog, ttk
+from tkinter import filedialog
 import chardet
 import csv
 import glob
@@ -39,36 +39,13 @@ def check_logs(folder_path):
             for line in error_lines:
                 writer.writerow(line)
 
-        root = tk.Tk()
-        root.title("Error Lines")
-        root.geometry("1024x768")
-
-        textbox = tk.Text(root)
-        textbox.pack(fill="both", expand=True)
-
-        # Add a Copy button to copy the error lines to the clipboard
-        copy_button = ttk.Button(root, text="Copy", command=lambda: root.clipboard_append(textbox.get("1.0", "end-1c")))
-        copy_button.pack(side="bottom", padx=10, pady=10)
-
-        # Add a scrollbar to the text box
-        scrollbar = ttk.Scrollbar(root, orient="vertical", command=textbox.yview)
-        scrollbar.pack(side="right", fill="y")
-
-        textbox.config(yscrollcommand=scrollbar.set)
-
-        # Split error lines into columns based on whitespace
-        for line in error_lines:
-            parts = line
-            filepath = parts[0]
-            line_number = parts[1]
-            error = parts[2]
-            textbox.insert("end", f"{filepath:<60}{line_number:<10}{error}\n")
-
-        root.mainloop()
+        print(f"{len(error_lines)} errors found. See error_log.csv for details.")
     else:
         print("No errors found.")
 
 
-folder_path = filedialog.askdirectory()
+root = tk.Tk()
+root.withdraw()
+folder_path = filedialog.askdirectory(title="Select folder to check logs")
 if folder_path:
     check_logs(folder_path)
