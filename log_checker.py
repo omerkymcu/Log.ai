@@ -4,6 +4,7 @@ from tkinter import filedialog
 import chardet
 import csv
 import glob
+import datetime
 
 
 def get_encoding_type(file):
@@ -26,20 +27,28 @@ def check_logs(folder_path):
         with open(file, mode='r', encoding=enc, errors='ignore') as f:
             for j, line in enumerate(f):
                 if 'error' in line.lower():
-                    error_lines.append([file, j + 1, line.strip()])
+                    error_lines.append(line.strip())
 
         print(f"{i} of {num_files} files processed")
         i += 1
 
-    if error_lines:
+    # count unique errors and their occurrences
+    unique_errors = {}
+    for line in error_lines:
+        if line not in unique_errors:
+            unique_errors[line] = 1
+        else:
+            unique_errors[line] += 1
+
+    if unique_errors:
         with open('error_log.csv', 'w', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(['File Path', 'Line Number', 'Error'])
+            writer.writerow(['Error', 'Occurrences'])
 
-            for line in error_lines:
-                writer.writerow(line)
+            for error, count in unique_errors.items():
+                writer.writerow([f"{error} ({count} occurrences)"])
 
-        print(f"{len(error_lines)} errors found. See error_log.csv for details.")
+        print(f"{len(unique_errors)} unique errors found. See error_log.csv for details.")
     else:
         print("No errors found.")
 
