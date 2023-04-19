@@ -26,7 +26,7 @@ def check_logs(folder_path):
         enc = get_encoding_type(file)
         with open(file, mode='r', encoding=enc, errors='ignore') as f:
             for j, line in enumerate(f):
-                if 'error' in line.lower():
+                if 'ERROR ' in line:
                     error_lines.append(line.strip())
 
         print(f"{i} of {num_files} files processed")
@@ -51,6 +51,7 @@ def check_logs(folder_path):
         print(f"{len(unique_errors)} unique errors found. See error_log.csv for details.")
     else:
         print("No errors found.")
+
 
 
 root = tk.Tk()
