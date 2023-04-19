@@ -28,11 +28,7 @@ def check_logs(folder_path):
         with open(file, mode='r', encoding=enc, errors='ignore') as f:
             for j, line in enumerate(f):
                 if 'ERROR ' in line:
-                    error_lines.append(line.strip())
-                elif 'error ' in line:
-                    pass
-                elif '_ERROR' in line:
-                    pass
+                    error_lines.append(line.replace('ERROR ', '').strip())
 
         print(f"{i} of {num_files} files processed")
         i += 1
@@ -40,11 +36,10 @@ def check_logs(folder_path):
     # count unique errors and their occurrences
     unique_errors = {}
     for line in error_lines:
-        line_cleaned = line.split('(')[0].strip()
-        if line_cleaned not in unique_errors:
-            unique_errors[line_cleaned] = 1
+        if line not in unique_errors:
+            unique_errors[line] = 1
         else:
-            unique_errors[line_cleaned] += 1
+            unique_errors[line] += 1
 
     if unique_errors:
         with open('error_log.csv', 'w', newline='') as csvfile:
@@ -57,6 +52,7 @@ def check_logs(folder_path):
         print(f"{len(unique_errors)} unique errors found. See error_log.csv for details.")
     else:
         print("No errors found.")
+
 
 
 
